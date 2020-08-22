@@ -2,10 +2,11 @@
 Fast and simple Levenshtein string distance algorithm
 
 I needed a good Levenshtain string distance algorithm for a personal Optical charater reader (OCR) project.
-After browsing through tens of pulicly available open source implementations I decided to write my own.
-It's optimized for a single use-case: Computing the distance between two short (less than 100 bytes) strings.
+After browsing through tens of publicly available open source implementations I decided to write my own.
 
-This repository contains also an accurate and simple implementation of the classic Wagner-Fischer "Algorithm X" from
+This one is optimized for a single use-case: Computing the distance between two short (less than 100 bytes) strings.
+
+The repository contains also an accurate and simple implementation of the classic Wagner-Fischer "Algorithm X" from
 
 The String-to-String Correction Problem, Robert A Wagner, Michael J.Fischer
 Journal of the ACM, 21:168-178, January 1974.
