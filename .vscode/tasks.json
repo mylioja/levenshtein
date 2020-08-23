@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"label": "Build the C/C++ project",
+			"label": "Build the project",
 			"command": "make",
 			"args": [
 			],
