@@ -201,7 +201,7 @@ namespace {
         return true;
     }
 
-}
+}   //  namespace
 
 
 int main(int, char**)
