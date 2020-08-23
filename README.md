@@ -16,4 +16,4 @@ https://doi.org/10.1145/321796.321811
 It's used as the "Gold Standard" to verify the faster version.
 
 It can internally check itself by creating a minimal edit sequence using the "Algorithm Y" from the same paper,
-and the applying the edit operations to the first string. The result must be equal to the other string.
+and then applying the edit operations to the first string. The result must be equal to the other string.
