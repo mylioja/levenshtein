@@ -1,92 +1,10 @@
 #include "levenshtein.h"
 #include "wagner_fischer_engine.h"
 
+#include <cstdlib>
 #include <iostream>
 
 namespace {
-
-    class LevenshteinTester
-    {
-    public:
-        void set_data(const char* text_a, const char* text_b, int expected_distance);
-        bool distances_match(const char* msg);
-        bool test_both();
-        bool test_own();
-
-    private:
-        std::string m_text_a;
-        std::string m_text_b;
-        int m_expected_distance;
-
-        int m_computed_distance;
-
-        Ylioja::WagnerFischerEngine m_engine;
-    };
-
-
-    void LevenshteinTester::set_data(const char* text_a, const char* text_b, int expected_distance)
-    {
-        m_text_a = text_a;
-        m_text_b = text_b;
-        m_expected_distance = expected_distance;
-    }
-
-
-    bool LevenshteinTester::distances_match(const char* msg)
-    {
-        if (m_computed_distance == m_expected_distance)
-        {
-            return true;
-        }
-
-        std::cout
-            << "Invalid result from " << msg
-            << " - Expected: " << m_expected_distance
-            << ", Got: " << m_computed_distance
-            << '\n';
-
-        std::cout << "Called with text_a: \"" << m_text_a << "\"\n";
-        std::cout << "Called with text_b: \"" << m_text_b << "\"\n";
-
-        return false;
-    }
-
-
-    bool LevenshteinTester::test_both()
-    {
-        m_computed_distance = m_engine.levenshtein_distance(m_text_a, m_text_b, true);
-        if (!distances_match("Wagner Fischer"))
-        {
-            return false;
-        }
-
-        m_computed_distance = m_engine.levenshtein_distance(m_text_b, m_text_a, true);
-        if (!distances_match("Reverse Wagner Fischer"))
-        {
-            return false;
-        }
-
-        return test_own();
-    }
-
-
-    bool LevenshteinTester::test_own()
-    {
-        m_computed_distance = Ylioja::levenshtein_distance(m_text_a, m_text_b);
-        if (!distances_match("Ylioja::levenshtein_distance()"))
-        {
-            return false;
-        }
-
-        m_computed_distance = Ylioja::levenshtein_distance(m_text_a, m_text_b);
-        if (!distances_match("Reverse Ylioja::levenshtein_distance()"))
-        {
-            return false;
-        }
-        
-        return true;
-    }
-
 
     struct TestCase {
         const char* text_a;
@@ -97,6 +15,10 @@ namespace {
     //  Basic sanity tests.
     TestCase basic_tests[] =
     {
+        { "1234567890abcdefghijklmnop", "ABCDEF", 26 },
+        { "1234567890abcdefX", "X", 16 },
+        { "1234567890abcdefg", "X", 17 },
+        { "1234567890Xabcdefg", "X", 17 },
         { "a", "", 1 },
         { "a", "b", 1 },
         { "ab", "a", 1 },
@@ -143,25 +65,139 @@ namespace {
         { "abcdefg", "ABXdfg", 4 },
         { "abcdefg", "acYABg", 4 },
         { "abcdefg", "abdZAB", 4 },
-        { "1234567890abcdef", "ABCDEF", 16 },
-        { "1234567890abcdefX", "X", 16 },
-        { "1234567890abcdefg", "X", 17 },
-        { "1234567890Xabcdefg", "X", 17 },
     };
 
 
-    //  Returns true if no problems
-    bool run_basic_tests(LevenshteinTester& tester)
+    //  Generate a small reasonably random integer less than the given limit.
+    //  Good enough as long as the given limit is below RAND_MAX.
+    int random_int(int limit)
+    {
+        return std::rand() % limit;
+    }
+
+
+    class LevenshteinTester
+    {
+    public:
+        bool run_basic_tests();
+        bool run_random_tests(int count);
+
+    private:
+        void generate_random_input();
+        bool distances_do_not_match(const char* method);
+        bool test_both_implementations();
+        bool test_the_own_implementation();
+
+        std::string m_text_a;
+        std::string m_text_b;
+        int m_expected_distance;
+        int m_computed_distance;
+
+        Ylioja::WagnerFischerEngine m_engine;
+    };
+
+
+    bool LevenshteinTester::run_basic_tests()
     {
         for (const auto& testcase : basic_tests)
         {
-            tester.set_data(testcase.text_a, testcase.text_b, testcase.distance);
-            if (!tester.test_both())
+            m_text_a = testcase.text_a;
+            m_text_b = testcase.text_b;
+            m_expected_distance = testcase.distance;
+            if (!test_both_implementations())
             {
                 return false;
             }
         }
 
+        return true;
+    }
+
+
+    bool LevenshteinTester::run_random_tests(int count)
+    {
+        while (count-- > 0)
+        {
+            generate_random_input();
+            m_text_b = m_text_a;
+
+            generate_random_input();
+
+            //  Expected result as computed by the "Gold Standard" implementation.
+            m_expected_distance = m_engine.levenshtein_distance(m_text_a, m_text_b, true);
+            
+            if (!test_the_own_implementation())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    void LevenshteinTester::generate_random_input()
+    {
+        m_text_a.clear();
+        int size = 1 + random_int(90);
+        while (size--)
+        {
+            m_text_a += 'a' + random_int(5);
+        }
+    }
+
+
+    bool LevenshteinTester::distances_do_not_match(const char* method)
+    {
+        if (m_computed_distance == m_expected_distance)
+        {
+            return false;   // Distances match
+        }
+
+        std::cout
+            << "Invalid result from " << method
+            << " expected: " << m_expected_distance
+            << ", got: " << m_computed_distance
+            << " instead\n";
+
+        std::cout << "Called with text_a: \"" << m_text_a << "\", text_b: \"" << m_text_b << "\"\n";
+
+        return true;    //  No match
+    }
+
+
+    bool LevenshteinTester::test_both_implementations()
+    {
+        m_computed_distance = m_engine.levenshtein_distance(m_text_a, m_text_b, true);
+        if (distances_do_not_match("Wagner-Fischer"))
+        {
+            return false;
+        }
+
+        m_computed_distance = m_engine.levenshtein_distance(m_text_b, m_text_a, true);
+        if (distances_do_not_match("Reverse Wagner-Fischer"))
+        {
+            return false;
+        }
+
+        return test_the_own_implementation();
+    }
+
+
+    bool LevenshteinTester::test_the_own_implementation()
+    {
+        m_computed_distance = Ylioja::levenshtein_distance(m_text_a, m_text_b);
+        if (distances_do_not_match("Ylioja::levenshtein_distance()"))
+        {
+            return false;
+        }
+
+        m_computed_distance = Ylioja::levenshtein_distance(m_text_b, m_text_a);
+        if (distances_do_not_match("Reverse Ylioja::levenshtein_distance()"))
+        {
+            return false;
+        }
+        
         return true;
     }
 
@@ -171,15 +207,24 @@ namespace {
 int main(int, char**)
 {
     LevenshteinTester tester;
-    std::cout << "Running basic test\n";
-    bool success = run_basic_tests(tester);
+    std::cout << "Running basic tests.\n";
+    bool success = tester.run_basic_tests();
     if (!success)
     {
-        std::cout << "Test FAILED\n";
+        std::cout << "One of the basic tests FAILED\n";
         return 1;
     }
 
-    std::cout << "Test OK\n";
+    int count = 10000;
+    std::cout << "Running " << count << " random tests.\n";
+    success = tester.run_random_tests(count);
+    if (!success)
+    {
+        std::cout << "One of the random tests FAILED\n";
+        return 2;
+    }
+
+    std::cout << "All tests passed OK\n";
     return 0;
 }
 
