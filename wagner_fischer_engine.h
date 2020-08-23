@@ -20,7 +20,7 @@ namespace Ylioja {
         int levenshtein_distance(const std::string& word_a, const std::string& word_b, bool verify);
 
     private:
-        bool verify_result(const std::string& word_a, const std::string& word_b) const;
+        void verify_result(const std::string& word_a, const std::string& word_b) const;
         std::string prepare_edit_sequence(const std::string& word_a, const std::string& word_b) const;
 
         //  Const and non-const 2D matrix like access to the distances vector
@@ -28,9 +28,10 @@ namespace Ylioja {
         int distance(int row, int col) const { return m_distances[index(row, col)]; }
         int& distance(int row, int col) { return m_distances[index(row, col)]; }
 
+        //  Dimensions of the distances matrix
         int m_row_count;
         int m_column_count;
-
+        
         std::vector<int> m_distances;
     };
 

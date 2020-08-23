@@ -110,6 +110,7 @@ namespace Ylioja {
         //  Result is now ready. Verify it if requested.
         if (verify)
         {
+            //  verify_result() calls std::abort() if any errors are detected.
             verify_result(word_a, word_b);
         }
 
@@ -119,8 +120,9 @@ namespace Ylioja {
 
     //  Verify the result by editing word_a according to the computed backtrace.
     //  The edited result text must be equal to word_b.
+    //  If an error is detected, reports it, and calls std::abort();
     //
-    bool WagnerFischerEngine::verify_result(const std::string& word_a, const std::string& word_b) const
+    void WagnerFischerEngine::verify_result(const std::string& word_a, const std::string& word_b) const
     {
         std::string edit = prepare_edit_sequence(word_a, word_b);
 
@@ -161,17 +163,13 @@ namespace Ylioja {
 
             default:
                 fatal_error("Invalid operation in edit sequence");
-                return false;
             }
         }
 
         if (text != word_b)
         {
             fatal_error("Edited result not as expected");
-            return false;
         }
-
-        return true;
     }
 
 
