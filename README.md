@@ -1,4 +1,4 @@
-# levenshtein
+# Levenshtein
 
 A fast and simple Levenshtein string distance algorithm.
 
