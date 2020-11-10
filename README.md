@@ -2,7 +2,7 @@
 
 A fast and simple Levenshtein string distance algorithm.
 
-I needed a good Levenshtein string distance algorithm for a personal Optical Charater Reader (OCR) project.
+I needed a good Levenshtein string distance algorithm for a personal Optical Character Reader (OCR) project.
 After browsing through tens of publicly available open source implementations I decided to write my own.
 
 This one is optimized for a single use-case: Computing the distance between two short (less than 100 bytes) strings.
